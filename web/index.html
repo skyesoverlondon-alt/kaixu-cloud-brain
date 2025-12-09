@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaixu Console v1 - Cloud Brain</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        
+        .panel {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.9);
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .panel-content {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+        
+        /* Left Panel - Controls */
+        .control-group {
+            margin-bottom: 24px;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        /* Center Panel - Chat */
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: 20px;
+        }
+        
+        .message {
+            padding: 16px;
+            border-radius: 8px;
+            max-width: 85%;
+            position: relative;
+        }
+        
+        .message-user {
+            background: rgba(37, 99, 235, 0.2);
+            border-left: 4px solid var(--primary);
+            margin-left: auto;
+        }
+        
+        .message-assistant {
+            background: rgba(124, 58, 237, 0.2);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .message-content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .message-content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .message-content pre {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.9);
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .input-row textarea {
+            flex: 1;
+            resize: none;
+            min-height: 60px;
+            max-height: 200px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Right Panel - Diagnostics */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(16, 185, 129, 0.2);
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: rgba(15, 23, 42, 0.7);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+        
+        .protocol-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+        
+        .badge-nbep { background: rgba(37, 99, 235, 0.3); color: #93c5fd; }
+        .badge-iip { background: rgba(16, 185, 129, 0.3); color: #a7f3d0; }
+        .badge-ptx { background: rgba(124, 58, 237, 0.3); color: #c4b5fd; }
+        
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .log-time {
+            opacity: 0.6;
+            margin-right: 8px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .panel {
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel - Controls -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>⚙️ Kaixu Controls</span>
+                <span class="btn btn-secondary" onclick="resetSettings()">Reset</span>
+            </div>
+            <div class="panel-content">
+                <div class="control-group">
+                    <label class="control-label">Backend URL</label>
+                    <input type="text" id="backendUrl" value="http://localhost:8080" placeholder="http://your-orchestrator:8080">
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Model Selection</label>
+                    <select id="modelSelect">
+                        <option value="kaixu-orchestrator">Kaixu Orchestrator (Default)</option>
+                        <option value="kaixu-brain-direct">Direct to Kaixu Brain</option>
+                        <option value="deepseek">DeepSeek V3</option>
+                        <option value="openai">GPT-4o Mini</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Protocol Enforcement</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="nbepEnabled" checked>
+                            <span>NBEP (No-Bullshit Execution)</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="iipEnabled">
+                            <span>IIP (Information Integrity)</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="ptxEnabled" checked>
+                            <span>PTX (Provider Transparency)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">NBEP Artifacts Requested</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="artifactFullHtml">
+                            <span>Full HTML File</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="artifactProductionCode">
+                            <span>Production Code</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="artifactCompleteSolution">
+                            <span>Complete Solution</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">NBEP Format Constraints</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="constraintSingleBlock" checked>
+                            <span>Single Code Block</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="constraintNoPlaceholder" checked>
+                            <span>No Placeholders</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="constraintErrorHandling" checked>
+                            <span>Error Handling</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Temperature</label>
+                    <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                    <span id="temperatureValue">0.7</span>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Max Tokens</label>
+                    <input type="number" id="maxTokens" value="2048" min="100" max="8192">
+                </div>
+                
+                <div class="control-group">
+                    <button class="btn btn-primary" onclick="testConnection()" style="width: 100%; margin-top: 8px;">
+                        🔗 Test Connection
+                    </button>
+                </div>
+                
+                <div class="control-group">
+                    <button class="btn btn-success" onclick="exportConversation()" style="width: 100%;">
+                        💾 Export Conversation
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Center Panel - Chat -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>💭 Kaixu Cloud Brain v1</span>
+                <div>
+                    <span class="btn btn-danger" onclick="clearChat()" style="margin-right: 8px;">Clear</span>
+                    <span class="btn btn-secondary" onclick="toggleDiagnostics()">Diagnostics</span>
+                </div>
+            </div>
+            <div class="panel-content" id="chatMessages">
+                <!-- Messages will be inserted here -->
+                <div class="message message-assistant">
+                    <div class="message-header">
+                        <span>Kaixu Cloud Brain v1</span>
+                        <span>Just now</span>
+                    </div>
+                    <div class="message-content">
+                        ✅ Kaixu Cloud Brain v1 initialized. 8B Llama 3.1 model ready on cloud GPU.
+                        <br><br>
+                        Protocols: NBEP (No-Bullshit Execution) enabled, PTX (Provider Transparency) active.
+                        <br><br>
+                        Ready for production requests. No partial implementations, no placeholders.
+                    </div>
+                </div>
+            </div>
+            <div class="input-area">
+                <div class="input-row">
+                    <textarea id="userInput" placeholder="Type your request here... (Shift+Enter for new line, Enter to send)" 
+                              onkeydown="handleKeyPress(event)"></textarea>
+                    <button class="btn btn-primary" onclick="sendMessage()" style="align-self: flex-end;">
+                        🚀 Send
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Diagnostics -->
+        <div class="panel" id="diagnosticsPanel">
+            <div class="panel-header">
+                <span>📊 Diagnostics & Protocols</span>
+                <span class="btn btn-secondary" onclick="refreshDiagnostics()">Refresh</span>
+            </div>
+            <div class="panel-content">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span id="statusText">Connected to Kaixu Orchestrator</span>
+                </div>
+                
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div>Response Time</div>
+                        <div class="metric-value" id="responseTime">0.0s</div>
+                    </div>
+                    <div class="metric-card">
+                        <div>Tokens Used</div>
+                        <div class="metric-value" id="tokensUsed">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div>Session ID</div>
+                        <div class="metric-value" id="sessionId">---</div>
+                    </div>
+                    <div class="metric-card">
+                        <div>Provider</div>
+                        <div class="metric-value" id="activeProvider">Kaixu</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Active Protocols</label>
+                    <div id="protocolBadges">
+                        <span class="protocol-badge badge-nbep">NBEP</span>
+                        <span class="protocol-badge badge-ptx">PTX</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Request Log</label>
+                    <div id="requestLog">
+                        <div class="log-entry">
+                            <span class="log-time">[12:00:00]</span>
+                            <span>System initialized</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Provider Status</label>
+                    <div id="providerStatus">
+                        <div class="log-entry">
+                            <span class="log-time">[12:00:00]</span>
+                            <span>Kaixu Brain: ✅ Operational</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class KaixuConsole {
+            constructor() {
+                this.conversation = [];
+                this.sessionId = 'sesh_' + Date.now();
+                this.lastResponseTime = 0;
+                this.isLoading = false;
+                
+                // Initialize from localStorage
+                this.loadSettings();
+                this.updateDiagnostics();
+                
+                // Test connection on load
+                setTimeout(() => this.testConnection(), 1000);
+            }
+            
+            loadSettings() {
+                const backendUrl = localStorage.getItem('kaixu_backend_url');
+                if (backendUrl) {
+                    document.getElementById('backendUrl').value = backendUrl;
+                }
+            }
+            
+            saveSettings() {
+                localStorage.setItem('kaixu_backend_url', document.getElementById('backendUrl').value);
+            }
+            
+            async testConnection() {
+                const backendUrl = document.getElementById('backendUrl').value;
+                this.log(`Testing connection to ${backendUrl}`);
+                
+                try {
+                    const response = await fetch(`${backendUrl}/health`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'healthy') {
+                        this.log('✅ Connection successful - Kaixu Brain operational');
+                        document.getElementById('statusText').textContent = 'Connected to Kaixu Orchestrator';
+                        return true;
+                    } else {
+                        this.log('⚠️ Connection degraded - Kaixu Brain may be unavailable');
+                        document.getElementById('statusText').textContent = 'Degraded - Brain unavailable';
+                        return false;
+                    }
+                } catch (error) {
+                    this.log(`❌ Connection failed: ${error.message}`);
+                    document.getElementById('statusText').textContent = 'Disconnected';
+                    return false;
+                }
+            }
+            
+            async sendMessage() {
+                const userInput = document.getElementById('userInput').value.trim();
+                if (!userInput || this.isLoading) return;
+                
+                // Clear input
+                document.getElementById('userInput').value = '';
+                
+                // Add user message to UI
+                this.addMessage('user', userInput);
+                
+                // Show loading indicator
+                this.showLoading();
+                
+                // Prepare request
+                const startTime = Date.now();
+                const request = this.buildRequest(userInput);
+                
+                try {
+                    const response = await fetch(`${document.getElementById('backendUrl').value}/v1/chat/completions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(request)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.lastResponseTime = (Date.now() - startTime) / 1000;
+                    
+                    // Update diagnostics
+                    this.updateDiagnostics(data);
+                    
+                    // Add assistant message
+                    this.addMessage('assistant', data.choices[0].message.content);
+                    
+                    // Log success
+                    this.log(`Request completed in ${this.lastResponseTime.toFixed(2)}s`);
+                    
+                } catch (error) {
+                    this.addMessage('assistant', `❌ Error: ${error.message}`);
+                    this.log(`Request failed: ${error.message}`);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            buildRequest(userMessage) {
+                // Build NBEP contract
+                const artifacts = [];
+                if (document.getElementById('artifactFullHtml').checked) artifacts.push('full_html_file');
+                if (document.getElementById('artifactProductionCode').checked) artifacts.push('production_code');
+                if (document.getElementById('artifactCompleteSolution').checked) artifacts.push('complete_solution');
+                
+                const constraints = [];
+                if (document.getElementById('constraintSingleBlock').checked) constraints.push('single_code_block');
+                if (document.getElementById('constraintNoPlaceholder').checked) constraints.push('no_placeholder');
+                if (document.getElementById('constraintErrorHandling').checked) constraints.push('error_handling');
+                
+                // Build metadata
+                const metadata = {
+                    session_id: this.sessionId,
+                    user_id: 'kaixu_operator',
+                    nbep_contract: {
+                        artifacts_requested: artifacts,
+                        format_constraints: constraints,
+                        scope: ['complete_implementation'],
+                        exclusions: []
+                    },
+                    iip_flags: {
+                        iip_mode: document.getElementById('iipEnabled').checked ? 'facts' : 'none',
+                        require_evidence: true,
+                        require_sources: true,
+                        confidence_threshold: 0.7
+                    },
+                    ptx_config: {
+                        primary: 'kaixu_cloud_brain_v1',
+                        alts: document.getElementById('ptxEnabled').checked ? ['deepseek', 'openai'] : [],
+                        cross_check: true,
+                        transparency: true
+                    }
+                };
+                
+                // Build messages array
+                const messages = [
+                    {
+                        role: 'system',
+                        content: 'You are Kaixu Cloud Brain v1. Provide complete, production-ready solutions. No partial implementations, no placeholders. Enforce NBEP, IIP, and PTX protocols.'
+                    },
+                    ...this.conversation.slice(-10).map(msg => ({
+                        role: msg.role,
+                        content: msg.content
+                    })),
+                    {
+                        role: 'user',
+                        content: userMessage
+                    }
+                ];
+                
+                return {
+                    model: 'kaixu-orchestrator',
+                    messages: messages,
+                    temperature: parseFloat(document.getElementById('temperature').value),
+                    max_tokens: parseInt(document.getElementById('maxTokens').value),
+                    top_p: 0.95,
+                    stream: false,
+                    metadata: metadata
+                };
+            }
+            
+            addMessage(role, content) {
+                const message = {
+                    role,
+                    content,
+                    timestamp: new Date().toISOString()
+                };
+                
+                this.conversation.push(message);
+                
+                // Update UI
+                const chatMessages = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message message-${role}`;
+                
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <span>${role === 'user' ? 'You' : 'Kaixu Cloud Brain v1'}</span>
+                        <span>${time}</span>
+                    </div>
+                    <div class="message-content">${this.formatContent(content)}</div>
+                `;
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            formatContent(content) {
+                // Convert markdown code blocks
+                let formatted = content
+                    .replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                        return `<pre><code class="language-${lang || ''}">${this.escapeHtml(code)}</code></pre>`;
+                    })
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    .replace(/\n/g, '<br>');
+                
+                // Highlight protocol sections
+                formatted = formatted.replace(/=== KAIXU NBEP EXECUTION REPORT ===/g, 
+                    '<strong style="color: #93c5fd;">=== KAIXU NBEP EXECUTION REPORT ===</strong>');
+                formatted = formatted.replace(/=== PTX TRANSPARENCY REPORT ===/g, 
+                    '<strong style="color: #c4b5fd;">=== PTX TRANSPARENCY REPORT ===</strong>');
+                
+                return formatted;
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            showLoading() {
+                this.isLoading = true;
+                const chatMessages = document.getElementById('chatMessages');
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loadingIndicator';
+                loadingDiv.className = 'message message-assistant';
+                loadingDiv.innerHTML = `
+                    <div class="message-header">
+                        <span>Kaixu Cloud Brain v1</span>
+                        <span>Just now</span>
+                    </div>
+                    <div class="message-content">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 20px; height: 20px; border: 2px solid #7c3aed; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <span>Processing with NBEP/PTX protocols...</span>
+                        </div>
+                    </div>
+                `;
+                chatMessages.appendChild(loadingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Add CSS for spinner
+                if (!document.querySelector('#spinner-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'spinner-style';
+                    style.textContent = `
+                        @keyframes spin {
+                            to { transform: rotate(360deg); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+            
+            hideLoading() {
+                this.isLoading = false;
+                const loadingDiv = document.getElementById('loadingIndicator');
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+            }
+            
+            updateDiagnostics(responseData = null) {
+                // Update metrics
+                document.getElementById('responseTime').textContent = `${this.lastResponseTime.toFixed(2)}s`;
+                document.getElementById('sessionId').textContent = this.sessionId.substring(0, 10) + '...';
+                
+                if (responseData) {
+                    document.getElementById('tokensUsed').textContent = responseData.usage?.total_tokens || 0;
+                    
+                    // Update provider info
+                    const provider = responseData.kaixu_diagnostics?.primary_provider || 'Kaixu';
+                    document.getElementById('activeProvider').textContent = provider;
+                    
+                    // Update protocol badges
+                    const badges = document.getElementById('protocolBadges');
+                    badges.innerHTML = '';
+                    
+                    if (document.getElementById('nbepEnabled').checked) {
+                        badges.innerHTML += '<span class="protocol-badge badge-nbep">NBEP</span>';
+                    }
+                    if (document.getElementById('iipEnabled').checked) {
+                        badges.innerHTML += '<span class="protocol-badge badge-iip">IIP</span>';
+                    }
+                    if (document.getElementById('ptxEnabled').checked) {
+                        badges.innerHTML += '<span class="protocol-badge badge-ptx">PTX</span>';
+                    }
+                }
+            }
+            
+            log(message) {
+                const logContainer = document.getElementById('requestLog');
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span>${message}</span>`;
+                
+                logContainer.appendChild(logEntry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+                
+                // Keep only last 20 entries
+                const entries = logContainer.querySelectorAll('.log-entry');
+                if (entries.length > 20) {
+                    entries[0].remove();
+                }
+            }
+            
+            clearChat() {
+                if (confirm('Clear conversation history?')) {
+                    this.conversation = [];
+                    document.getElementById('chatMessages').innerHTML = `
+                        <div class="message message-assistant">
+                            <div class="message-header">
+                                <span>Kaixu Cloud Brain v1</span>
+                                <span>Just now</span>
+                            </div>
+                            <div class="message-content">
+                                Conversation cleared. Ready for new requests.
+                            </div>
+                        </div>
+                    `;
+                    this.log('Conversation cleared');
+                }
+            }
+            
+            exportConversation() {
+                const exportData = {
+                    session_id: this.sessionId,
+                    timestamp: new Date().toISOString(),
+                    conversation: this.conversation,
+                    settings: {
+                        backend_url: document.getElementById('backendUrl').value,
+                        protocols: {
+                            nbep: document.getElementById('nbepEnabled').checked,
+                            iip: document.getElementById('iipEnabled').checked,
+                            ptx: document.getElementById('ptxEnabled').checked
+                        }
+                    }
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kaixu_conversation_${this.sessionId}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.log('Conversation exported');
+            }
+        }
+        
+        // Initialize console
+        const consoleApp = new KaixuConsole();
+        
+        // Global functions for HTML buttons
+        function sendMessage() {
+            consoleApp.sendMessage();
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        function testConnection() {
+            consoleApp.saveSettings();
+            consoleApp.testConnection();
+        }
+        
+        function clearChat() {
+            consoleApp.clearChat();
+        }
+        
+        function exportConversation() {
+            consoleApp.exportConversation();
+        }
+        
+        function resetSettings() {
+            if (confirm('Reset all settings to defaults?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+        
+        function refreshDiagnostics() {
+            consoleApp.updateDiagnostics();
+            consoleApp.log('Diagnostics refreshed');
+        }
+        
+        function toggleDiagnostics() {
+            const panel = document.getElementById('diagnosticsPanel');
+            panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+        }
+        
+        // Update temperature display
+        document.getElementById('temperature').addEventListener('input', function() {
+            document.getElementById('temperatureValue').textContent = this.value;
+        });
+    </script>
+</body>
+</html>
