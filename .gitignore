@@ -1,0 +1,7 @@
+# Never commit real environment files
+.env
+*.env.backup
+
+# Optional: editor / OS junk
+*.swp
+.DS_Store
